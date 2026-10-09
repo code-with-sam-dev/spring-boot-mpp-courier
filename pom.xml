@@ -24,7 +24,7 @@
     <modules>
         <module>tempo-wallet</module>
         <module>courier-api</module>
-        <!--R module retailer-assistant -->
+        <module>retailer-assistant</module>
     </modules>
 
     <properties>
