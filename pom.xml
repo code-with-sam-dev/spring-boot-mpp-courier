@@ -23,7 +23,7 @@
 
     <modules>
         <module>tempo-wallet</module>
-        <!--C module courier-api -->
+        <module>courier-api</module>
         <!--R module retailer-assistant -->
     </modules>
 
