@@ -1,0 +1,20 @@
+$ bin/new-wallet.sh
+(run a second time: the existing keys are kept, the payer is topped up from the testnet faucet)
+courier address 0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb
+A payer key already exists; delete it from .env to replace it.
+payer address  0x103604c41634224c9914bd79988369d694c69e2a
+faucet         5 funding transactions sent
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.848335 pathUSD
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.848335 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.15 pathUSD
+
+$ cut -d= -f1 .env    (names only; the values never leave the machine)
+COURIER_RECIPIENT_ADDRESS
+MPP_SECRET_KEY
+PAYER_PRIVATE_KEY
+PAYER_ADDRESS
+
+$ ls -l .env
+-rw------- .env

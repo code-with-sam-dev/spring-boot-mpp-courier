@@ -1,0 +1,66 @@
+$ bin/tests.sh testnet
+courier-api  LostResponseTest
+  ok   an honest courier loses nothing
+  ok   loses only as many paid responses as configured
+courier-api  PremiumQuoteApiTest
+  ok   an invalid quote request is rejected before any payment
+  ok   the premium quote asks for payment with a challenge
+  ok   a redeemed hash cannot buy a different request
+  ok   a redeemed hash without the idempotency key is a replay
+  ok   a lost paid response is recovered with the original receipt
+  ok   the standard quote is free
+  ok   the request field is base64 url without padding
+retailer-assistant  CourierAssistantMcpTest
+  ok   exposes the three tools over mcp
+retailer-assistant  ChargeOfferTest
+  ok   the memo binds the payment to this server and this challenge
+  ok   reads what the courier is asking for
+retailer-assistant  MppPaymentClientTest
+  ok   pays once then retries with a hash credential
+  ok   a request already redeemed is answered from the record
+  ok   a lost response is recovered with exactly one transfer
+  ok   a crash before the broadcast resumes the same signed transfer
+  ok   a free response costs nothing
+  ok   a timeout after paying is recovered the same way
+  ok   if the courier will not hand it over the client stops and never pays again
+  ok   a policy refusal broadcasts nothing
+retailer-assistant  PaymentAuditServiceTest
+  ok   only todays approvals count towards the budget
+  ok   records each step with an explorer link
+retailer-assistant  PaymentPolicyServiceTest
+  ok   refuses a price over the per request limit
+  ok   refuses another chain
+  ok   refuses an unknown recipient
+  ok   recipients are compared without case
+  ok   approves the normal premium quote
+  ok   refuses once the daily budget would be exceeded
+  ok   refuses another payment method
+  ok   refuses an expired challenge
+  ok   every refusal is audited
+  ok   refuses another currency
+retailer-assistant  UnsafePaymentClientTest
+  ok   pays whatever the courier asks
+  ok   pays twice when the paid response is lost
+tempo-wallet  EnvFileTest
+  ok   writes keys owner readable only
+  ok   replaces an existing key and keeps the others
+tempo-wallet  PathUsdTest
+  ok   five cents is fifty thousand base units
+  ok   base units convert back to dollars
+  ok   more than six decimals is rejected
+tempo-wallet  TempoCallsTest
+  ok   transfer with memo uses the tip20 selector
+  ok   balance of uses the erc20 selector
+  ok   transfer with memo carries recipient amount and memo
+tempo-wallet  TempoWalletTest
+  ok   the hash is known before anything is broadcast
+retailer-assistant  HttpExchangeTranscriptTestnetIT
+  ok   records one real exchange and the replay attempts
+retailer-assistant  MppPaymentTestnetIT
+  ok   the unsafe client pays the raised price
+  ok   a redeemed transaction cannot buy a different request
+  ok   a policy refusal broadcasts nothing
+  ok   a lost response costs the unsafe client two transfers and the safe client one
+  ok   free quote then402 then payment then200 with a receipt
+
+49 tests, 0 failed

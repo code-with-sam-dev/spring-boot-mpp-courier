@@ -28,30 +28,33 @@ public class CourierAssistant {
     }
 
     @McpTool(name = "standard_delivery_quotes",
-            description = "Free. The standard delivery price (GBP) and days for a parcel.")
+            description = "Free. Standard delivery price (GBP) and days for a parcel.")
     public DeliveryQuote standardDeliveryQuotes(
             @McpToolParam(description = "Collection town, e.g. London") String from,
             @McpToolParam(description = "Delivery town, e.g. Manchester") String to,
-            @McpToolParam(description = "Parcel weight in kg, 0.1 to 30") BigDecimal weightKg) {
+            @McpToolParam(description = "Parcel weight in kg, 0.1 to 30")
+            BigDecimal weightKg) {
         return quotations.standard(new QuoteRequest(from, to, weightKg));
     }
 
     @McpTool(name = "premium_delivery_quote",
-            description = "COSTS MONEY. Buys the premium courier's next-day quote. The "
-                    + "courier charges a fee per request (0.05 pathUSD on Tempo testnet), "
-                    + "paid automatically only if the payment policy allows it: per-request "
-                    + "limit, daily budget and approved couriers. Returns the quote, the "
-                    + "fee paid and the transaction, or the policy's reason for refusing.")
+            description = "COSTS MONEY. Buys the premium courier's next-day quote. "
+                    + "The courier charges a fee per request (0.05 pathUSD on Tempo "
+                    + "testnet), paid automatically only if the payment policy allows "
+                    + "it: per-request limit, daily budget and approved couriers. "
+                    + "Returns the quote, the fee paid and the transaction, or the "
+                    + "policy's reason for refusing.")
     public PremiumQuoteResult premiumDeliveryQuote(
             @McpToolParam(description = "Collection town, e.g. London") String from,
             @McpToolParam(description = "Delivery town, e.g. Manchester") String to,
-            @McpToolParam(description = "Parcel weight in kg, 0.1 to 30") BigDecimal weightKg) {
+            @McpToolParam(description = "Parcel weight in kg, 0.1 to 30")
+            BigDecimal weightKg) {
         return quotations.premium(new QuoteRequest(from, to, weightKg));
     }
 
     @McpTool(name = "payment_audit",
-            description = "Read only. Every payment decision so far: approved, refused, "
-                    + "paid, delivered, with amounts and transaction links.")
+            description = "Read only. Every payment decision so far: approved, "
+                    + "refused, paid, delivered, with amounts and transaction links.")
     public List<PaymentAuditEntry> paymentAudit() {
         return audit.entries();
     }

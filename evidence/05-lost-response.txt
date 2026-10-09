@@ -1,0 +1,143 @@
+$ bin/evidence/05-lost-response.sh
+(Tempo Moderato testnet, chain 42431, test tokens only)
+
+## Unsafe client. courier-api: --courier.misbehaviour.lose-paid-responses=1
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.548048 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.45 pathUSD
+
+
+$ curl -s 'http://localhost:18080/break/quotes/premium?from=London&to=Manchester&weightKg=3' | python3 -m json.tool
+{
+    "body": "{\"courier\":\"Swift Courier Premium\",\"price\":9.70,\"currency\":\"GBP\",\"days\":1}",
+    "amountPaid": 0.05,
+    "txHash": "0x3d543432cb91ecd0cd95ce451c9cfa2aaab4216653267139c0dd7fde427eb85d"
+}
+
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.447966 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.55 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/payments' | python3 -m json.tool
+[
+    {
+        "id": 1,
+        "at": "2026-10-09T14:12:52.296605Z",
+        "client": "unsafe",
+        "outcome": "PAID",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "NATM-jTiYeZ6PMgG5ZSF9rLxMPsoGYU9ffHE2Su64oY",
+        "txHash": "0x68b0f9aaf4dacb0bf44d432626f03aa52b1cc2b643ce11bdad698acaa7b2ba1e",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x68b0f9aaf4dacb0bf44d432626f03aa52b1cc2b643ce11bdad698acaa7b2ba1e",
+        "detail": "no policy"
+    },
+    {
+        "id": 2,
+        "at": "2026-10-09T14:12:55.765644Z",
+        "client": "unsafe",
+        "outcome": "PAID",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "Aui9gNPm0hqGC6FjzymX8ZZJaWdfhIOUFFqPNdrWSNU",
+        "txHash": "0x3d543432cb91ecd0cd95ce451c9cfa2aaab4216653267139c0dd7fde427eb85d",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x3d543432cb91ecd0cd95ce451c9cfa2aaab4216653267139c0dd7fde427eb85d",
+        "detail": "no policy"
+    }
+]
+
+# courier-api log
+c.c.c.p.payment.PaymentProblemAdvice     : 402 Payment Required: Payment is required for "localhost:18090" (Premium courier quotation)., challenge NATM-jTiYeZ6PMgG5ZSF9rLxMPsoGYU9ffHE2Su64oY
+c.c.c.provider.payment.PaymentGate       : payment verified, tx 0x68b0f9aaf4dacb0bf44d432626f03aa52b1cc2b643ce11bdad698acaa7b2ba1e
+c.c.c.p.m.LostResponseSimulator          : dropping a paid response on purpose
+c.c.c.p.payment.PaymentProblemAdvice     : 402 Payment Required: Payment is required for "localhost:18090" (Premium courier quotation)., challenge Aui9gNPm0hqGC6FjzymX8ZZJaWdfhIOUFFqPNdrWSNU
+c.c.c.provider.payment.PaymentGate       : payment verified, tx 0x3d543432cb91ecd0cd95ce451c9cfa2aaab4216653267139c0dd7fde427eb85d
+
+## Safe client. A fresh courier-api with the same misbehaviour
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.447966 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.55 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=3' | python3 -m json.tool
+{
+    "status": "PAID",
+    "quote": {
+        "courier": "Swift Courier Premium",
+        "price": 9.7,
+        "currency": "GBP",
+        "days": 1
+    },
+    "quoteFee": 0.05,
+    "paymentTx": "0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+    "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+    "reason": null
+}
+
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.397925 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.6 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/payments' | python3 -m json.tool
+[
+    {
+        "id": 1,
+        "at": "2026-10-09T14:13:07.905405Z",
+        "client": "safe",
+        "outcome": "APPROVED",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "4mrdZvdbtGICwTRZGV9SYFfDvnTuRfIIcNVFPeGJzBc",
+        "txHash": null,
+        "explorerUrl": null,
+        "detail": "within policy"
+    },
+    {
+        "id": 2,
+        "at": "2026-10-09T14:13:11.059033Z",
+        "client": "safe",
+        "outcome": "PAID",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "4mrdZvdbtGICwTRZGV9SYFfDvnTuRfIIcNVFPeGJzBc",
+        "txHash": "0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "detail": "transfer mined"
+    },
+    {
+        "id": 3,
+        "at": "2026-10-09T14:13:11.997198Z",
+        "client": "safe",
+        "outcome": "RESPONSE_LOST",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "4mrdZvdbtGICwTRZGV9SYFfDvnTuRfIIcNVFPeGJzBc",
+        "txHash": "0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "detail": "attempt 1: no answer, same credential again"
+    },
+    {
+        "id": 4,
+        "at": "2026-10-09T14:13:12.004297Z",
+        "client": "safe",
+        "outcome": "DELIVERED",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "4mrdZvdbtGICwTRZGV9SYFfDvnTuRfIIcNVFPeGJzBc",
+        "txHash": "0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d",
+        "detail": "receipt matches"
+    }
+]
+
+# courier-api log
+c.c.c.p.payment.PaymentProblemAdvice     : 402 Payment Required: Payment is required for "localhost:18090" (Premium courier quotation)., challenge 4mrdZvdbtGICwTRZGV9SYFfDvnTuRfIIcNVFPeGJzBc
+c.c.c.provider.payment.PaymentGate       : payment verified, tx 0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d
+c.c.c.p.m.LostResponseSimulator          : dropping a paid response on purpose
+c.c.c.p.redemption.RedemptionService     : recovered paid quote for tx 0xf370f84212087d72ec7239eaab25c6b32f37820e5a64a0fb8bcfac9e9432226d

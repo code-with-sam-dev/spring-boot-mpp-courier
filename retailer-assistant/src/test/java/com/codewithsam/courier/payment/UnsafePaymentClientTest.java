@@ -4,10 +4,8 @@ import static com.codewithsam.courier.payment.TestChallenges.COURIER;
 import static com.codewithsam.courier.payment.TestChallenges.NOW;
 import static com.codewithsam.courier.payment.TestChallenges.PATH_USD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 import com.codewithsam.courier.wallet.TempoNetwork;
 import com.stripe.mpp.Challenge;
@@ -40,7 +38,8 @@ class UnsafePaymentClientTest {
         wallet = new FakeWallet();
         client = new UnsafePaymentClient(new CourierHttp(http.build()),
                 new TempoChargePayer(wallet, TempoNetwork.MODERATO),
-                new PaymentAuditService(TestDatabase.fresh(), Clock.fixed(NOW, ZoneOffset.UTC)));
+                new PaymentAuditService(TestDatabase.fresh(),
+                        Clock.fixed(NOW, ZoneOffset.UTC)));
     }
 
     @Test
@@ -51,7 +50,8 @@ class UnsafePaymentClientTest {
         client.get(QUOTE);
 
         assertThat(wallet.signed).singleElement()
-                .satisfies(t -> assertThat(t.amount()).isEqualTo(BigInteger.valueOf(5_000_000)));
+                .satisfies(t -> assertThat(t.amount())
+                        .isEqualTo(BigInteger.valueOf(5_000_000)));
     }
 
     @Test
@@ -67,14 +67,15 @@ class UnsafePaymentClientTest {
     }
 
     private static ResponseCreator paymentRequired(String units) {
-        Challenge challenge = TestChallenges.charge("tempo", units, PATH_USD, COURIER, 42431,
-                NOW.plusSeconds(300));
+        Challenge challenge = TestChallenges.charge("tempo", units, PATH_USD, COURIER,
+                42431, NOW.plusSeconds(300));
         return withStatus(HttpStatus.PAYMENT_REQUIRED)
                 .header("WWW-Authenticate", challenge.toWwwAuthenticate());
     }
 
     private static ResponseCreator paid(String txHash) {
         return withSuccess("{}", MediaType.APPLICATION_JSON)
-                .header("Payment-Receipt", Receipt.success(txHash, "tempo").toPaymentReceipt());
+                .header("Payment-Receipt",
+                        Receipt.success(txHash, "tempo").toPaymentReceipt());
     }
 }

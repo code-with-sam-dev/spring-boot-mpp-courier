@@ -36,7 +36,8 @@ class PaymentConfig {
     @Bean
     Wallet payerWallet(TempoNetwork network,
             @Value("${assistant.payment.payer-private-key}") String privateKey) {
-        return new TempoWallet(new TempoRpc(network.rpcUrl()), network.chainId(), privateKey);
+        TempoRpc rpc = new TempoRpc(network.rpcUrl());
+        return new TempoWallet(rpc, network.chainId(), privateKey);
     }
 
     @Bean
@@ -52,17 +53,17 @@ class PaymentConfig {
     }
 
     @Bean
-    MppPaymentClient mppPaymentClient(CourierHttp courierHttp, PaymentPolicyService policy,
-            TempoChargePayer payer, PaymentOperationStore operations,
-            PaymentAuditService audit) {
+    MppPaymentClient mppPaymentClient(CourierHttp courierHttp,
+            PaymentPolicyService policy, TempoChargePayer payer,
+            PaymentOperationStore operations, PaymentAuditService audit) {
         return new MppPaymentClient(courierHttp, policy, payer, operations, audit);
     }
 
-    /** Only with --spring.profiles.active=break, for the chapter that shows the failures. */
+    /** Only with --spring.profiles.active=break, for the chapter on failures. */
     @Bean
     @Profile("break")
-    UnsafePaymentClient unsafePaymentClient(CourierHttp courierHttp, TempoChargePayer payer,
-            PaymentAuditService audit) {
+    UnsafePaymentClient unsafePaymentClient(CourierHttp courierHttp,
+            TempoChargePayer payer, PaymentAuditService audit) {
         return new UnsafePaymentClient(courierHttp, payer, audit);
     }
 }

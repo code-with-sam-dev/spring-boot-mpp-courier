@@ -73,42 +73,49 @@ public class MppPaymentClient {
                 return new PaidResponse(operation.body(), offer.amount(), txHash);
             }
             case PENDING_PAYMENT -> {
-                payer.settle(operation.signedTransfer()); // re-broadcasts the SAME transfer
+                // Broadcasts the SAME signed transfer; a no-op if it is already mined.
+                payer.settle(operation.signedTransfer());
                 operations.markBroadcast(operation.requestKey());
-                audit.record("safe", AuditOutcome.PAID, offer, txHash, "transfer mined");
+                audit.record("safe", AuditOutcome.PAID, offer, txHash,
+                        "transfer mined");
             }
             case BROADCAST, UNDELIVERED -> log.info("resuming paid request {}", txHash);
         }
         return redeem(uri, operation, offer);
     }
 
-    private PaidResponse redeem(URI uri, PaymentOperation operation, ChargeOffer offer) {
+    private PaidResponse redeem(URI uri, PaymentOperation operation,
+            ChargeOffer offer) {
         String txHash = operation.txHash();
         String authorization = payer.authorization(operation.challenge(), txHash);
         for (int attempt = 1; attempt <= DELIVERY_ATTEMPTS; attempt++) {
-            Optional<HttpReply> reply = presentCredential(uri, authorization, operation);
+            Optional<HttpReply> reply =
+                    presentCredential(uri, authorization, operation);
             if (reply.isPresent() && reply.get().isOk()) {
+                String body = reply.get().body();
                 String receipt = matchingReceipt(reply.get(), txHash);
-                operations.markRedeemed(operation.requestKey(), reply.get().body(), receipt);
-                audit.record("safe", AuditOutcome.DELIVERED, offer, txHash, "receipt matches");
-                return new PaidResponse(reply.get().body(), offer.amount(), txHash);
+                operations.markRedeemed(operation.requestKey(), body, receipt);
+                audit.record("safe", AuditOutcome.DELIVERED, offer, txHash,
+                        "receipt matches");
+                return new PaidResponse(body, offer.amount(), txHash);
             }
             if (reply.isPresent() && !reply.get().isServerError()) {
                 break; // the courier answered, and the answer is no
             }
             audit.record("safe", AuditOutcome.RESPONSE_LOST, offer, txHash,
-                    "attempt " + attempt + ": no answer, presenting the same credential");
+                    "attempt " + attempt + ": no answer, same credential again");
         }
         operations.markUndelivered(operation.requestKey());
-        audit.record("safe", AuditOutcome.UNDELIVERED, offer, txHash, "not paying again");
+        audit.record("safe", AuditOutcome.UNDELIVERED, offer, txHash,
+                "not paying again");
         throw new PaidButUndeliveredException(txHash);
     }
 
     private Optional<HttpReply> presentCredential(URI uri, String authorization,
             PaymentOperation operation) {
         try {
-            return Optional.of(
-                    http.get(uri, authorization, idempotencyKey(operation.requestKey())));
+            String key = idempotencyKey(operation.requestKey());
+            return Optional.of(http.get(uri, authorization, key));
         } catch (ResourceAccessException timeout) {
             return Optional.empty();
         }
@@ -116,14 +123,15 @@ public class MppPaymentClient {
 
     private static String matchingReceipt(HttpReply reply, String txHash) {
         String header = reply.headers().getFirst("Payment-Receipt");
-        if (header == null
-                || !txHash.equalsIgnoreCase(Receipt.fromPaymentReceipt(header).reference())) {
+        if (header == null || !txHash.equalsIgnoreCase(
+                Receipt.fromPaymentReceipt(header).reference())) {
             throw new IllegalStateException("200 without a receipt for " + txHash);
         }
         return header;
     }
 
     private static String idempotencyKey(String requestKey) {
-        return UUID.nameUUIDFromBytes(requestKey.getBytes(StandardCharsets.UTF_8)).toString();
+        byte[] bytes = requestKey.getBytes(StandardCharsets.UTF_8);
+        return UUID.nameUUIDFromBytes(bytes).toString();
     }
 }

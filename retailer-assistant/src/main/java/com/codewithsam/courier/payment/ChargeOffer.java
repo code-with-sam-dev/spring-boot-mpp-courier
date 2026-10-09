@@ -32,7 +32,8 @@ public record ChargeOffer(
                 String.valueOf(request.get("currency")),
                 String.valueOf(request.get("recipient")),
                 chainId instanceof Number number ? number.longValue() : -1,
-                challenge.expires() == null ? null : Instant.parse(challenge.expires()));
+                challenge.expires() == null ? null
+                        : Instant.parse(challenge.expires()));
     }
 
     /** pathUSD has 6 decimals, so 50000 base units is 0.05. */

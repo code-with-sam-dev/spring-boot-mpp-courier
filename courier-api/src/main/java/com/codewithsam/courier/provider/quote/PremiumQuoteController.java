@@ -35,7 +35,8 @@ public class PremiumQuoteController {
     public ResponseEntity<QuoteResponse> premiumQuote(
             @Valid QuoteRequest request,
             @RequestHeader(name = AUTHORIZATION, required = false) String authorization,
-            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(name = "Idempotency-Key", required = false)
+            String idempotencyKey) {
         // Already paid for this exact request, but the answer never arrived.
         Optional<Redemption> earlier =
                 redemptions.findEarlier(authorization, idempotencyKey, request);
@@ -50,7 +51,8 @@ public class PremiumQuoteController {
         return paid(quote, receipt.toPaymentReceipt());
     }
 
-    private static ResponseEntity<QuoteResponse> paid(QuoteResponse quote, String receipt) {
+    private static ResponseEntity<QuoteResponse> paid(QuoteResponse quote,
+            String receipt) {
         return ResponseEntity.ok()
                 .header("Payment-Receipt", receipt)
                 .cacheControl(CacheControl.empty().cachePrivate())

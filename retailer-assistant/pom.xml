@@ -45,6 +45,13 @@
         <dependency>
             <groupId>com.codewithsam.courier</groupId>
             <artifactId>tempo-wallet</artifactId>
+            <exclusions>
+                <!-- The CLI's silent logger; the app logs with Logback. -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-nop</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- Client side we use only Challenge, Credential, Receipt and Attribution. -->
         <dependency>

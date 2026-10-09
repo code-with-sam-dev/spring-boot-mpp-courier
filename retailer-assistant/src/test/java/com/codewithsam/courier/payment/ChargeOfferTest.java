@@ -13,8 +13,9 @@ class ChargeOfferTest {
     void readsWhatTheCourierIsAskingFor() {
         Challenge challenge = TestChallenges.premiumQuote();
         String header = challenge.toWwwAuthenticate();
+        Challenge parsed = Challenge.fromWwwAuthenticate(header).getFirst();
 
-        ChargeOffer offer = ChargeOffer.from(Challenge.fromWwwAuthenticate(header).getFirst());
+        ChargeOffer offer = ChargeOffer.from(parsed);
 
         assertThat(offer.method()).isEqualTo("tempo");
         assertThat(offer.intent()).isEqualTo("charge");
@@ -36,6 +37,6 @@ class ChargeOfferTest {
         assertThat(Attribution.isMppMemo(memo)).isTrue();
         assertThat(Attribution.verifyServer(memo, "localhost:8090")).isTrue();
         assertThat(Attribution.verifyChallengeBinding(memo, challenge.id())).isTrue();
-        assertThat(Attribution.verifyChallengeBinding(memo, "another-challenge")).isFalse();
+        assertThat(Attribution.verifyChallengeBinding(memo, "another-id")).isFalse();
     }
 }

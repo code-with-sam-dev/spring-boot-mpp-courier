@@ -1,0 +1,28 @@
+$ ./mvnw -B -pl retailer-assistant verify -Ptestnet -Dit.test=HttpExchangeTranscriptTestnetIT
+(Tempo Moderato testnet, chain 42431, test tokens only)
+
+== A. Same credential, same Idempotency-Key, same parcel ==
+(recovering a lost response: stored result, no payment)
+< HTTP/1.1 200
+< cache-control: private
+< content-type: application/json
+< payment-receipt: eyJtZXRob2QiOiJ0ZW1wbyIsInJlZmVyZW5jZSI6IjB4MmVjNDU4ZWQxMTBiNTFjNWYzODkwMGU4Y2IwM2JiNTM1NzUxMTBjODg2MGZkMGE2MTJiZjYyYTc0ZmFiYjc2YSIsInN0YXR1cyI6InN1Y2Nlc3MiLCJ0aW1lc3RhbXAiOiIyMDI2LTEwLTA5VDE0OjE0OjEzLjE0NzUzNFoifQ
+
+{"courier":"Swift Courier Premium","price":8.60,"currency":"GBP","days":1}
+
+== B. Same credential, same Idempotency-Key, a 9 kg parcel ==
+< HTTP/1.1 402
+< cache-control: no-store
+< content-type: application/problem+json
+< www-authenticate: Payment id="4uUF5q8bEAPlWSnVqXFsgs_EmVo0KE8wubiVnV-RhXQ", realm="localhost:18196", method="tempo", intent="charge", request="eyJhbW91bnQiOiI1MDAwMCIsImN1cnJlbmN5IjoiMHgyMGMwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4ZTYxNGU0M2U0ZmJmOTg2N2JkZjRlMmRkYmQzZjYyODY1OGI5M2RkYiJ9", expires="2026-10-09T14:19:13.189347Z", description="Premium courier quotation"
+
+{"type":"https://paymentauth.org/problems/verification-failed","title":"Verification Failed","status":402,"detail":"Payment verification failed: transaction hash already redeemed: 0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a.","challengeId":"4uUF5q8bEAPlWSnVqXFsgs_EmVo0KE8wubiVnV-RhXQ"}
+
+== C. Same credential, no Idempotency-Key ==
+< HTTP/1.1 402
+< cache-control: no-store
+< content-type: application/problem+json
+< www-authenticate: Payment id="x3RKIX1FbnTvnrbLvVp2HtKHjh1eTNhpxN0nZM0wH14", realm="localhost:18196", method="tempo", intent="charge", request="eyJhbW91bnQiOiI1MDAwMCIsImN1cnJlbmN5IjoiMHgyMGMwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4ZTYxNGU0M2U0ZmJmOTg2N2JkZjRlMmRkYmQzZjYyODY1OGI5M2RkYiJ9", expires="2026-10-09T14:19:13.193202Z", description="Premium courier quotation"
+
+{"type":"https://paymentauth.org/problems/verification-failed","title":"Verification Failed","status":402,"detail":"Payment verification failed: transaction hash already redeemed: 0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a.","challengeId":"x3RKIX1FbnTvnrbLvVp2HtKHjh1eTNhpxN0nZM0wH14"}
+

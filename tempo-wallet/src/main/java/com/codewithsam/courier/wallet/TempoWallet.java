@@ -36,7 +36,8 @@ public class TempoWallet implements Wallet {
     public SignedTransfer signTransferWithMemo(
             String token, String recipient, BigInteger amount, String memo) {
         String data = TempoCalls.transferWithMemo(recipient, amount, memo);
-        BigInteger nonce = rpc.quantity("eth_getTransactionCount", address(), "pending");
+        BigInteger nonce =
+                rpc.quantity("eth_getTransactionCount", address(), "pending");
         BigInteger gasPrice = rpc.quantity("eth_gasPrice");
         RawTransaction tx = RawTransaction.createTransaction(chainId, nonce,
                 estimateGas(token, data), token, BigInteger.ZERO, data,
@@ -44,7 +45,8 @@ public class TempoWallet implements Wallet {
         return sign(tx, chainId, credentials);
     }
 
-    static SignedTransfer sign(RawTransaction tx, long chainId, Credentials credentials) {
+    static SignedTransfer sign(RawTransaction tx, long chainId,
+            Credentials credentials) {
         String raw = Numeric.toHexString(
                 TransactionEncoder.signMessage(tx, chainId, credentials));
         return new SignedTransfer(Hash.sha3(raw), raw);

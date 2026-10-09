@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exists only under the "break" profile: the unsafe client, for the demo of what fails. */
+/** Only under the "break" profile: the unsafe client, to show what goes wrong. */
 @RestController
 @Profile("break")
 public class BreakChapterController {
@@ -17,7 +17,8 @@ public class BreakChapterController {
     private final UnsafePaymentClient unsafeClient;
     private final CourierProperties courier;
 
-    public BreakChapterController(UnsafePaymentClient unsafeClient, CourierProperties courier) {
+    public BreakChapterController(UnsafePaymentClient unsafeClient,
+            CourierProperties courier) {
         this.unsafeClient = unsafeClient;
         this.courier = courier;
     }

@@ -63,7 +63,9 @@ public class PaymentOperationStore {
     }
 
     private void move(String requestKey, OperationState state) {
-        db.sql("UPDATE payment_operation SET state = ?, updated_at = ? WHERE request_key = ?")
+        db.sql("""
+                UPDATE payment_operation SET state = ?, updated_at = ?
+                WHERE request_key = ?""")
                 .params(state.name(), now(), requestKey)
                 .update();
     }

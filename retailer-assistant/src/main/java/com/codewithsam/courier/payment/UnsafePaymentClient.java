@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
  */
 public class UnsafePaymentClient {
 
-    private static final Logger log = LoggerFactory.getLogger(UnsafePaymentClient.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(UnsafePaymentClient.class);
 
     private final CourierHttp http;
     private final TempoChargePayer payer;
@@ -31,7 +32,8 @@ public class UnsafePaymentClient {
             return payAndFetch(uri);
         } catch (RuntimeException firstFailure) {
             log.warn("request failed ({}), retrying", firstFailure.getMessage());
-            return payAndFetch(uri); // a fresh request, so a fresh challenge and payment
+            // A fresh request: a fresh challenge, and a fresh payment.
+            return payAndFetch(uri);
         }
     }
 
@@ -47,7 +49,8 @@ public class UnsafePaymentClient {
         payer.settle(transfer);
         audit.record("unsafe", AuditOutcome.PAID, offer, transfer.hash(), "no policy");
 
-        HttpReply paid = http.get(uri, payer.authorization(challenge, transfer.hash()), null);
+        String credential = payer.authorization(challenge, transfer.hash());
+        HttpReply paid = http.get(uri, credential, null);
         if (!paid.isOk()) {
             throw new IllegalStateException("courier answered " + paid.status());
         }

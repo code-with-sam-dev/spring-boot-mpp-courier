@@ -18,7 +18,8 @@ public class RedemptionStore {
     public void save(Redemption r) {
         db.sql("""
                 INSERT INTO redemption (tx_hash, challenge_id, idempotency_key,
-                    request_fingerprint, courier, price, currency, days, receipt, redeemed_at)
+                    request_fingerprint, courier, price, currency, days, receipt,
+                    redeemed_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""")
                 .params(r.txHash(), r.challengeId(), r.idempotencyKey(),
                         r.requestFingerprint(), r.quote().courier(), r.quote().price(),
@@ -35,8 +36,9 @@ public class RedemptionStore {
                         rs.getString("challenge_id"),
                         rs.getString("idempotency_key"),
                         rs.getString("request_fingerprint"),
-                        new QuoteResponse(rs.getString("courier"), rs.getBigDecimal("price"),
-                                rs.getString("currency"), rs.getInt("days")),
+                        new QuoteResponse(rs.getString("courier"),
+                                rs.getBigDecimal("price"), rs.getString("currency"),
+                                rs.getInt("days")),
                         rs.getString("receipt"),
                         rs.getTimestamp("redeemed_at").toInstant()))
                 .optional();

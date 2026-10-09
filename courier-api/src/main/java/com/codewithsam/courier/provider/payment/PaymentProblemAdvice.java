@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 class PaymentProblemAdvice {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentProblemAdvice.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(PaymentProblemAdvice.class);
 
     private final PaymentGate paymentGate;
 
@@ -29,7 +30,8 @@ class PaymentProblemAdvice {
 
     @ExceptionHandler(PaymentException.class)
     ResponseEntity<Map<String, Object>> paymentProblem(PaymentException problem) {
-        ResponseEntity.BodyBuilder response = ResponseEntity.status(problem.getHttpStatus())
+        ResponseEntity.BodyBuilder response = ResponseEntity
+                .status(problem.getHttpStatus())
                 .cacheControl(CacheControl.noStore())
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON);
         String challengeId = null;
@@ -37,8 +39,8 @@ class PaymentProblemAdvice {
             Challenge retry = paymentGate.freshChallenge();
             response.header(HttpHeaders.WWW_AUTHENTICATE, retry.toWwwAuthenticate());
             challengeId = retry.id();
-            log.info("402 {}: {}, challenge {}", problem.getTitle(), problem.getMessage(),
-                    challengeId);
+            log.info("402 {}: {}, challenge {}", problem.getTitle(),
+                    problem.getMessage(), challengeId);
         }
         return response.body(problem.toProblemDetails(challengeId));
     }

@@ -26,8 +26,8 @@ public class TempoRpc {
     }
 
     public JsonNode call(String method, Object... params) {
-        String body = json.writeValueAsString(Map.of(
-                "jsonrpc", "2.0", "id", 1, "method", method, "params", List.of(params)));
+        String body = json.writeValueAsString(Map.of("jsonrpc", "2.0", "id", 1,
+                "method", method, "params", List.of(params)));
         HttpRequest request = HttpRequest.newBuilder(endpoint)
                 .timeout(Duration.ofSeconds(30))
                 .header("Content-Type", "application/json")
@@ -44,10 +44,11 @@ public class TempoRpc {
         return Numeric.decodeQuantity(call(method, params).asString());
     }
 
-    /** TIP-20 balanceOf. eth_getBalance is meaningless on Tempo: it has no native token. */
+    /** TIP-20 balanceOf. eth_getBalance means nothing on Tempo: no native token. */
     public BigInteger balanceOf(String token, String owner) {
-        String result = call("eth_call",
-                Map.of("to", token, "data", TempoCalls.balanceOf(owner)), "latest").asString();
+        String data = TempoCalls.balanceOf(owner);
+        String result = call("eth_call", Map.of("to", token, "data", data), "latest")
+                .asString();
         return Numeric.toBigInt(result);
     }
 

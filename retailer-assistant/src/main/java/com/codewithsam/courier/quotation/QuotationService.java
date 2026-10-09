@@ -46,14 +46,15 @@ public class QuotationService {
         String requestKey = "premium-quote|" + request.fingerprint() + "|"
                 + LocalDate.now(clock);
         try {
-            PaidResponse paid = paymentClient.get(uri("/quotes/premium", request), requestKey);
+            URI premium = uri("/quotes/premium", request);
+            PaidResponse paid = paymentClient.get(premium, requestKey);
             return new PremiumQuoteResult(Status.PAID,
                     json.readValue(paid.body(), DeliveryQuote.class), paid.amountPaid(),
                     paid.txHash(), paid.txHash() == null ? null
                             : network.transactionUrl(paid.txHash()), null);
         } catch (PaymentRefusedException refused) {
-            return new PremiumQuoteResult(Status.REFUSED_BY_POLICY, null, BigDecimal.ZERO,
-                    null, null, refused.getMessage());
+            return new PremiumQuoteResult(Status.REFUSED_BY_POLICY, null,
+                    BigDecimal.ZERO, null, null, refused.getMessage());
         } catch (PaidButUndeliveredException undelivered) {
             return new PremiumQuoteResult(Status.PAID_BUT_UNDELIVERED, null, null,
                     undelivered.txHash(), network.transactionUrl(undelivered.txHash()),

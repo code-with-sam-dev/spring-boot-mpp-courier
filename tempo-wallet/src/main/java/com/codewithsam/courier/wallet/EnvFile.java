@@ -35,7 +35,8 @@ public class EnvFile {
                         PosixFilePermissions.fromString("rw-------")));
             }
             Files.write(path, lines);
-            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
+            Files.setPosixFilePermissions(path,
+                    PosixFilePermissions.fromString("rw-------"));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

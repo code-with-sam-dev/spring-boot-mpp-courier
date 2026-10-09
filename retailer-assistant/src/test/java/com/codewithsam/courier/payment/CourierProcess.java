@@ -28,7 +28,7 @@ final class CourierProcess implements AutoCloseable {
         Path jar;
         try (var files = Files.list(Path.of("../courier-api/target"))) {
             jar = files.filter(p -> p.toString().endsWith("-exec.jar")).findFirst()
-                    .orElseThrow(() -> new IllegalStateException("build courier-api first"));
+                    .orElseThrow(() -> new IllegalStateException("build courier-api"));
         }
         List<String> command = new ArrayList<>(List.of(
                 ProcessHandle.current().info().command().orElse("java"), "-jar",
@@ -53,8 +53,9 @@ final class CourierProcess implements AutoCloseable {
         HttpClient http = HttpClient.newHttpClient();
         for (int i = 0; i < 60; i++) {
             try {
-                http.send(HttpRequest.newBuilder(uri("/quotes/standard?from=a&to=b&weightKg=1"))
-                        .build(), HttpResponse.BodyHandlers.discarding());
+                URI probe = uri("/quotes/standard?from=a&to=b&weightKg=1");
+                http.send(HttpRequest.newBuilder(probe).build(),
+                        HttpResponse.BodyHandlers.discarding());
                 return;
             } catch (IOException notYet) {
                 Thread.sleep(500);

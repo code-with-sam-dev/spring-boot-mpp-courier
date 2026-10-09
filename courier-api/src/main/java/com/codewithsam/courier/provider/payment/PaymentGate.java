@@ -34,7 +34,8 @@ public class PaymentGate {
             log.info("payment verified, tx {}", verified.receipt().reference());
             return verified.receipt();
         }
-        throw new PaymentRequiredException(payments.realm(), premiumQuoteCharge.description());
+        throw new PaymentRequiredException(
+                payments.realm(), premiumQuoteCharge.description());
     }
 
     public Challenge freshChallenge() {

@@ -58,7 +58,8 @@ class PaymentPolicyServiceTest {
     void refusesAnUnknownRecipient() {
         String stranger = "0x00000000000000000000000000000000000bad00";
         assertRefused(TestChallenges.charge("tempo", "50000", PATH_USD, stranger, 42431,
-                NOW.plusSeconds(60)), "recipient " + stranger + " is not an approved courier");
+                NOW.plusSeconds(60)), "recipient " + stranger
+                + " is not an approved courier");
     }
 
     @Test
@@ -69,31 +70,36 @@ class PaymentPolicyServiceTest {
 
     @Test
     void refusesAPriceOverThePerRequestLimit() {
-        assertRefused(TestChallenges.charge("tempo", "5000000", PATH_USD, COURIER, 42431,
-                NOW.plusSeconds(60)), "5.00 pathUSD is over the 0.10 per-request limit");
+        assertRefused(TestChallenges.charge("tempo", "5000000", PATH_USD, COURIER,
+                42431, NOW.plusSeconds(60)),
+                "5.00 pathUSD is over the 0.10 per-request limit");
     }
 
     @Test
     void refusesOnceTheDailyBudgetWouldBeExceeded() {
         for (int i = 0; i < 5; i++) {
-            assertThat(policy.approve(offer(TestChallenges.premiumQuote())).approved()).isTrue();
+            ChargeOffer premium = offer(TestChallenges.premiumQuote());
+            assertThat(policy.approve(premium).approved()).isTrue();
         }
 
         assertRefused(TestChallenges.premiumQuote(),
-                "0.05 pathUSD would bring today's spend to 0.30, over the 0.25 daily budget");
+                "0.05 pathUSD would bring today's spend to 0.30,"
+                        + " over the 0.25 daily budget");
     }
 
     @Test
     void recipientsAreComparedWithoutCase() {
-        assertThat(policy.approve(offer(TestChallenges.charge("tempo", "50000", PATH_USD,
-                COURIER.toUpperCase().replace("0X", "0x"), 42431, NOW.plusSeconds(60))))
-                .approved()).isTrue();
+        String shouting = COURIER.toUpperCase().replace("0X", "0x");
+        var challenge = TestChallenges.charge("tempo", "50000", PATH_USD, shouting,
+                42431, NOW.plusSeconds(60));
+
+        assertThat(policy.approve(offer(challenge)).approved()).isTrue();
     }
 
     @Test
     void everyRefusalIsAudited() {
-        policy.approve(offer(TestChallenges.charge("tempo", "5000000", PATH_USD, COURIER,
-                42431, NOW.plusSeconds(60))));
+        policy.approve(offer(TestChallenges.charge("tempo", "5000000", PATH_USD,
+                COURIER, 42431, NOW.plusSeconds(60))));
 
         assertThat(audit.entries()).singleElement().satisfies(entry -> {
             assertThat(entry.outcome()).isEqualTo(AuditOutcome.REFUSED);

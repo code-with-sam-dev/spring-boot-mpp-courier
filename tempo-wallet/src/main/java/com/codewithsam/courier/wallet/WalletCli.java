@@ -35,7 +35,8 @@ public final class WalletCli {
                 }
             }
             default -> {
-                System.err.println("usage: new-payer <env> | new-courier <env> | balance <addr>...");
+                System.err.println(
+                        "usage: new-payer ENV | new-courier ENV | balance ADDRESS...");
                 System.exit(2);
             }
         }
@@ -43,7 +44,8 @@ public final class WalletCli {
 
     private static void newPayer(TempoRpc rpc, EnvFile env) throws Exception {
         if (env.get("PAYER_PRIVATE_KEY").isPresent()) {
-            System.out.println("A payer key already exists; delete it from .env to replace it.");
+            System.out.println(
+                    "A payer key already exists; delete it from .env to replace it.");
         } else {
             Credentials payer = Credentials.create(Keys.createEcKeyPair());
             env.put("PAYER_PRIVATE_KEY", Numeric.toHexStringWithPrefixZeroPadded(
@@ -81,7 +83,7 @@ public final class WalletCli {
     }
 
     private static void printBalance(TempoRpc rpc, String address) {
-        System.out.println(address + "  "
-                + PathUsd.fromBaseUnits(balance(rpc, address)).toPlainString() + " pathUSD");
+        String pathUsd = PathUsd.fromBaseUnits(balance(rpc, address)).toPlainString();
+        System.out.println(address + "  " + pathUsd + " pathUSD");
     }
 }

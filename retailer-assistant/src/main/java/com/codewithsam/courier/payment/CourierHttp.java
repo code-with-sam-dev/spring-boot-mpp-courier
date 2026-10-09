@@ -27,6 +27,7 @@ public class CourierHttp {
                 .exchange((request, response) -> new HttpReply(
                         response.getStatusCode().value(),
                         response.getHeaders(),
-                        new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8)));
+                        new String(response.getBody().readAllBytes(),
+                                StandardCharsets.UTF_8)));
     }
 }

@@ -19,14 +19,14 @@ final class TestChallenges {
         return charge("tempo", "50000", PATH_USD, COURIER, 42431, NOW.plusSeconds(300));
     }
 
-    static Challenge charge(String method, String units, String currency, String recipient,
-            int chainId, Instant expires) {
+    static Challenge charge(String method, String units, String currency,
+            String recipient, int chainId, Instant expires) {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("amount", units);
         request.put("currency", currency);
         request.put("methodDetails", Map.of("chainId", chainId));
         request.put("recipient", recipient);
-        return Challenge.create("test-secret", "localhost:8090", method, "charge", request,
-                expires.toString(), "Premium courier quotation", null);
+        return Challenge.create("test-secret", "localhost:8090", method, "charge",
+                request, expires.toString(), "Premium courier quotation", null);
     }
 }

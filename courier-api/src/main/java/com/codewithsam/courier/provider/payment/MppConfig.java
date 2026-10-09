@@ -23,7 +23,8 @@ class MppConfig {
     }
 
     @Bean
-    ChargeRequest premiumQuoteCharge(TempoMethod tempo, PremiumChargeProperties charge) {
+    ChargeRequest premiumQuoteCharge(TempoMethod tempo,
+            PremiumChargeProperties charge) {
         return ChargeRequest.of(tempo.chargeIntent(), charge.price().toPlainString(),
                         TempoDefaults.TESTNET_PATH_USD, charge.recipient())
                 .description(charge.description());

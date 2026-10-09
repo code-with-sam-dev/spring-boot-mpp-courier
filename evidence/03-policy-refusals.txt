@@ -1,0 +1,83 @@
+$ bin/evidence/03-policy-refusals.sh
+(Tempo Moderato testnet, chain 42431, test tokens only)
+
+## 1. The courier raises the premium price to 5.00 pathUSD
+payer nonce 27
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.798294 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.2 pathUSD
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "status": "REFUSED_BY_POLICY",
+    "quote": null,
+    "quoteFee": 0,
+    "paymentTx": null,
+    "explorerUrl": null,
+    "reason": "5.00 pathUSD is over the 0.10 per-request limit"
+}
+
+payer nonce 27
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.798294 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.2 pathUSD
+
+## 2. The challenge names a recipient that is not an approved courier
+payer nonce 27
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "status": "REFUSED_BY_POLICY",
+    "quote": null,
+    "quoteFee": 0,
+    "paymentTx": null,
+    "explorerUrl": null,
+    "reason": "recipient 0x00000000000000000000000000000000000bad00 is not an approved courier"
+}
+
+payer nonce 27
+
+## 3. The daily budget (0.25) runs out after five 0.05 quotes
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=1' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+PAID 0.05 0xb1e36b4a2d64d64172718b83ae6bf3f416cc86773d9f7b732188c0c9cfe6c8c9
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+PAID 0.05 0xf62f2f94917eed135b3dc22cc89d36d0be1145786380f974a41a174b2bdf4a8d
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=3' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+PAID 0.05 0x61bc5a4f1f5c08d16495048b0aeac4f32cfa1403843037d17ad8674585b09b02
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=4' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+PAID 0.05 0x669a9e0a3b7048d2cf7c5dc68e65d5e38657b0fff0ca20585f77f720f3d167d5
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=5' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+PAID 0.05 0xd8b790b1e4576e57abaf80d11fdca05c0bb774b9c0d22fb07dea9a1177224746
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=6' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["status"], r["quoteFee"], r["paymentTx"] or r["reason"])'
+REFUSED_BY_POLICY 0 0.05 pathUSD would bring today's spend to 0.30, over the 0.25 daily budget
+
+payer nonce 32
+
+$ curl -s 'http://localhost:18080/assistant/payments' | python3 -c 'import json,sys
+for e in json.load(sys.stdin): print(e["outcome"].ljust(9), str(e["amount"]).ljust(5), e["txHash"] or e["detail"])'
+APPROVED  0.05  within policy
+PAID      0.05  0xb1e36b4a2d64d64172718b83ae6bf3f416cc86773d9f7b732188c0c9cfe6c8c9
+DELIVERED 0.05  0xb1e36b4a2d64d64172718b83ae6bf3f416cc86773d9f7b732188c0c9cfe6c8c9
+APPROVED  0.05  within policy
+PAID      0.05  0xf62f2f94917eed135b3dc22cc89d36d0be1145786380f974a41a174b2bdf4a8d
+DELIVERED 0.05  0xf62f2f94917eed135b3dc22cc89d36d0be1145786380f974a41a174b2bdf4a8d
+APPROVED  0.05  within policy
+PAID      0.05  0x61bc5a4f1f5c08d16495048b0aeac4f32cfa1403843037d17ad8674585b09b02
+DELIVERED 0.05  0x61bc5a4f1f5c08d16495048b0aeac4f32cfa1403843037d17ad8674585b09b02
+APPROVED  0.05  within policy
+PAID      0.05  0x669a9e0a3b7048d2cf7c5dc68e65d5e38657b0fff0ca20585f77f720f3d167d5
+DELIVERED 0.05  0x669a9e0a3b7048d2cf7c5dc68e65d5e38657b0fff0ca20585f77f720f3d167d5
+APPROVED  0.05  within policy
+PAID      0.05  0xd8b790b1e4576e57abaf80d11fdca05c0bb774b9c0d22fb07dea9a1177224746
+DELIVERED 0.05  0xd8b790b1e4576e57abaf80d11fdca05c0bb774b9c0d22fb07dea9a1177224746
+REFUSED   0.05  0.05 pathUSD would bring today's spend to 0.30, over the 0.25 daily budget
+

@@ -36,7 +36,7 @@ public class PaymentAuditService {
                 .update();
     }
 
-    /** What the policy has approved today. Refusals and unsafe payments do not count. */
+    /** What the policy approved today. Refusals and unsafe payments do not count. */
     public BigDecimal spentToday() {
         return db.sql("""
                 SELECT COALESCE(SUM(amount), 0) FROM payment_audit
@@ -57,9 +57,12 @@ public class PaymentAuditService {
                         rs.getString("recipient"),
                         rs.getString("challenge_id"),
                         rs.getString("tx_hash"),
-                        rs.getString("tx_hash") == null ? null
-                                : TempoNetwork.MODERATO.transactionUrl(rs.getString("tx_hash")),
+                        explorerUrl(rs.getString("tx_hash")),
                         rs.getString("detail")))
                 .list();
+    }
+
+    private static String explorerUrl(String txHash) {
+        return txHash == null ? null : TempoNetwork.MODERATO.transactionUrl(txHash);
     }
 }

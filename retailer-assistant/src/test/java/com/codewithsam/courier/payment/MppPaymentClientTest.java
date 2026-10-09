@@ -4,12 +4,9 @@ import static com.codewithsam.courier.payment.TestChallenges.COURIER;
 import static com.codewithsam.courier.payment.TestChallenges.NOW;
 import static com.codewithsam.courier.payment.TestChallenges.PATH_USD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.codewithsam.courier.config.PaymentPolicyProperties;
 import com.codewithsam.courier.wallet.TempoNetwork;
@@ -40,8 +37,8 @@ class MppPaymentClientTest {
 
     private static final URI QUOTE = URI.create(
             "http://courier.test/quotes/premium?from=London&to=Manchester&weightKg=2");
-    private static final String BODY = """
-            {"courier":"Swift Courier Premium","price":8.60,"currency":"GBP","days":1}""";
+    private static final String BODY = "{\"courier\":\"Swift Courier Premium\","
+            + "\"price\":8.60,\"currency\":\"GBP\",\"days\":1}";
     private static final String FIRST_TX = "0x%064x".formatted(1);
 
     private MockRestServiceServer courier;
@@ -68,7 +65,8 @@ class MppPaymentClientTest {
 
     @Test
     void aFreeResponseCostsNothing() {
-        courier.expect(requestTo(QUOTE)).andRespond(withSuccess(BODY, MediaType.APPLICATION_JSON));
+        courier.expect(requestTo(QUOTE))
+                .andRespond(withSuccess(BODY, MediaType.APPLICATION_JSON));
 
         PaidResponse response = client.get(QUOTE, "order-1");
 
@@ -90,7 +88,8 @@ class MppPaymentClientTest {
         assertThat(wallet.signed).singleElement().satisfies(transfer -> {
             assertThat(transfer.recipient()).isEqualTo(COURIER);
             assertThat(transfer.amount()).isEqualTo(BigInteger.valueOf(50_000));
-            assertThat(Attribution.verifyChallengeBinding(transfer.memo(), challenge.id()))
+            String memo = transfer.memo();
+            assertThat(Attribution.verifyChallengeBinding(memo, challenge.id()))
                     .isTrue();
         });
         Credential sent = credentialOf(paidRequests.getFirst());
@@ -105,8 +104,9 @@ class MppPaymentClientTest {
 
     @Test
     void aPolicyRefusalBroadcastsNothing() {
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.charge(
-                "tempo", "5000000", PATH_USD, COURIER, 42431, NOW.plusSeconds(300))));
+        courier.expect(requestTo(QUOTE))
+                .andRespond(paymentRequired(TestChallenges.charge("tempo", "5000000",
+                        PATH_USD, COURIER, 42431, NOW.plusSeconds(300))));
 
         assertThatThrownBy(() -> client.get(QUOTE, "order-1"))
                 .isInstanceOf(PaymentRefusedException.class)
@@ -117,7 +117,7 @@ class MppPaymentClientTest {
 
     @Test
     void aLostResponseIsRecoveredWithExactlyOneTransfer() {
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.premiumQuote()));
+        courier.expect(requestTo(QUOTE)).andRespond(premiumChallenge());
         courier.expect(requestTo(QUOTE)).andRespond(capture(withServerError()));
         courier.expect(requestTo(QUOTE)).andRespond(paid(FIRST_TX));
 
@@ -133,9 +133,10 @@ class MppPaymentClientTest {
 
     @Test
     void aTimeoutAfterPayingIsRecoveredTheSameWay() {
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.premiumQuote()));
+        courier.expect(requestTo(QUOTE)).andRespond(premiumChallenge());
         courier.expect(requestTo(QUOTE))
-                .andRespond(capture(withException(new SocketTimeoutException("read timed out"))));
+                .andRespond(capture(
+                        withException(new SocketTimeoutException("timeout"))));
         courier.expect(requestTo(QUOTE)).andRespond(paid(FIRST_TX));
 
         client.get(QUOTE, "order-1");
@@ -145,7 +146,7 @@ class MppPaymentClientTest {
 
     @Test
     void ifTheCourierWillNotHandItOverTheClientStopsAndNeverPaysAgain() {
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.premiumQuote()));
+        courier.expect(requestTo(QUOTE)).andRespond(premiumChallenge());
         courier.expect(requestTo(QUOTE)).andRespond(capture(withServerError()));
         courier.expect(requestTo(QUOTE)).andRespond(capture(
                 paymentRequired(TestChallenges.premiumQuote())));
@@ -154,7 +155,7 @@ class MppPaymentClientTest {
                 .isInstanceOf(PaidButUndeliveredException.class)
                 .hasMessageContaining(FIRST_TX);
 
-        // Asked again later: it resumes from the record, it does not sign a new transfer.
+        // Asked again later: it resumes from the record, no new transfer is signed.
         courier.reset();
         paidRequests.clear();
         courier.expect(requestTo(QUOTE)).andRespond(paid(FIRST_TX));
@@ -169,7 +170,7 @@ class MppPaymentClientTest {
     @Test
     void aCrashBeforeTheBroadcastResumesTheSameSignedTransfer() {
         wallet.broadcastFailuresToSimulate = 1;
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.premiumQuote()));
+        courier.expect(requestTo(QUOTE)).andRespond(premiumChallenge());
 
         assertThatThrownBy(() -> client.get(QUOTE, "order-1"))
                 .isInstanceOf(TempoRpcException.class);
@@ -185,7 +186,7 @@ class MppPaymentClientTest {
 
     @Test
     void aRequestAlreadyRedeemedIsAnsweredFromTheRecord() {
-        courier.expect(requestTo(QUOTE)).andRespond(paymentRequired(TestChallenges.premiumQuote()));
+        courier.expect(requestTo(QUOTE)).andRespond(premiumChallenge());
         courier.expect(requestTo(QUOTE)).andRespond(paid(FIRST_TX));
         client.get(QUOTE, "order-1");
         courier.verify();
@@ -199,11 +200,16 @@ class MppPaymentClientTest {
         assertThat(wallet.signed).hasSize(1);
     }
 
+    private static ResponseCreator premiumChallenge() {
+        return paymentRequired(TestChallenges.premiumQuote());
+    }
+
     private static ResponseCreator paymentRequired(Challenge challenge) {
         return withStatus(HttpStatus.PAYMENT_REQUIRED)
                 .header("WWW-Authenticate", challenge.toWwwAuthenticate())
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body("{\"type\":\"https://paymentauth.org/problems/payment-required\"}");
+                .body("{\"type\":\"https://paymentauth.org/problems/"
+                        + "payment-required\"}");
     }
 
     private ResponseCreator paid(String txHash) {

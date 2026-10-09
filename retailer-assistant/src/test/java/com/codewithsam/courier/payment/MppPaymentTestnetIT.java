@@ -36,7 +36,8 @@ class MppPaymentTestnetIT {
     private final EnvFile env = new EnvFile(Path.of("../.env"));
     private final TempoNetwork network = TempoNetwork.MODERATO;
     private final TempoRpc rpc = new TempoRpc(network.rpcUrl());
-    private final String courierAddress = env.get("COURIER_RECIPIENT_ADDRESS").orElseThrow();
+    private final String courierAddress =
+            env.get("COURIER_RECIPIENT_ADDRESS").orElseThrow();
     private final Map<String, String> courierEnv = Map.of(
             "COURIER_RECIPIENT_ADDRESS", courierAddress,
             "MPP_SECRET_KEY", env.get("MPP_SECRET_KEY").orElseThrow());
@@ -74,13 +75,14 @@ class MppPaymentTestnetIT {
             assertThat(challenge.headers().getCacheControl()).isEqualTo("no-store");
             BigDecimal before = courierBalance();
 
-            PaidResponse paid = safeClient.get(courier.uri(PREMIUM + "2"), "it-happy-path");
+            PaidResponse paid =
+                    safeClient.get(courier.uri(PREMIUM + "2"), "it-happy-path");
 
             assertThat(paid.body()).contains("Swift Courier Premium");
             assertThat(paid.txHash()).startsWith("0x");
             assertThat(wallet.isSettled(paid.txHash())).isTrue();
             assertThat(courierBalance().subtract(before)).isEqualByComparingTo("0.05");
-            System.out.println("happy path tx " + network.transactionUrl(paid.txHash()));
+            System.out.println("happy path " + network.transactionUrl(paid.txHash()));
         }
     }
 
@@ -91,7 +93,8 @@ class MppPaymentTestnetIT {
             BigInteger nonceBefore = payerNonce();
             BigDecimal balanceBefore = payerBalance();
 
-            assertThatThrownBy(() -> safeClient.get(courier.uri(PREMIUM + "2"), "it-refusal"))
+            assertThatThrownBy(
+                    () -> safeClient.get(courier.uri(PREMIUM + "2"), "it-refusal"))
                     .isInstanceOf(PaymentRefusedException.class)
                     .hasMessage("5.00 pathUSD is over the 0.10 per-request limit");
 
@@ -150,16 +153,19 @@ class MppPaymentTestnetIT {
             payer.settle(transfer);
             String credential = payer.authorization(challenge, transfer.hash());
 
-            HttpReply paid = http.get(courier.uri(PREMIUM + "4"), credential, "it-replay");
+            HttpReply paid =
+                    http.get(courier.uri(PREMIUM + "4"), credential, "it-replay");
             assertThat(paid.status()).isEqualTo(200);
-            assertThat(Receipt.fromPaymentReceipt(paid.headers().getFirst("Payment-Receipt"))
-                    .reference()).isEqualTo(transfer.hash());
+            String receipt = paid.headers().getFirst("Payment-Receipt");
+            assertThat(Receipt.fromPaymentReceipt(receipt).reference())
+                    .isEqualTo(transfer.hash());
 
             HttpReply sameRequestAgain =
                     http.get(courier.uri(PREMIUM + "4"), credential, "it-replay");
             HttpReply otherParcel =
                     http.get(courier.uri(PREMIUM + "9"), credential, "it-replay");
-            HttpReply noIdempotencyKey = http.get(courier.uri(PREMIUM + "4"), credential, null);
+            HttpReply noIdempotencyKey =
+                    http.get(courier.uri(PREMIUM + "4"), credential, null);
 
             assertThat(sameRequestAgain.status()).isEqualTo(200);
             assertThat(otherParcel.status()).isEqualTo(402);

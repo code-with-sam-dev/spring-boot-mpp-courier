@@ -1,0 +1,43 @@
+$ bin/evidence/agent-claude-code.sh
+(claude -p --setting-sources project --strict-mcp-config --mcp-config .mcp.json
+ --tools "" --allowedTools <the three courier-assistant tools>)
+Tempo Moderato testnet, chain 42431, test tokens only.
+Claude Code 2.1.292, model claude-sonnet-5-5
+MCP servers: courier-assistant (connected)
+Tools available: mcp__courier-assistant__payment_audit, mcp__courier-assistant__premium_delivery_quote, mcp__courier-assistant__standard_delivery_quotes
+Plugins: cc-plugin-agents-md, cc-plugin-telemetry, cc-plugin-plugin-authoring | Skills: none
+
+USER: We run a small online shop and need to send a 2 kg parcel from London to Manchester. Use the courier tools to compare the delivery options and recommend one. You may buy the premium quote if the payment policy allows it. Finish by showing what was paid, from the payment audit. 
+
+TOOL CALL  standard_delivery_quotes {"from": "London", "to": "Manchester", "weightKg": 2}
+TOOL CALL  premium_delivery_quote {"from": "London", "to": "Manchester", "weightKg": 2}
+TOOL RESULT {"courier":"Parcel Post Standard","price":4.90,"currency":"GBP","days":3}
+
+TOOL RESULT {"status":"PAID","quote":{"courier":"Swift Courier Premium","price":8.60,"currency":"GBP","days":1},"quoteFee":0.05,"paymentTx":"0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","explorerUrl":"https://explore.testnet.tempo.xyz/tx/0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","reason":null}
+
+TOOL CALL  payment_audit {}
+TOOL RESULT [{"id":1,"at":"2026-10-09T14:13:31.542118Z","client":"safe","outcome":"APPROVED","amount":0.050000,"recipient":"0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb","challengeId":"RWAxfIXyeXCllEJfftOVt68kdClBFKqtyKfe4cs5CRg","txHash":null,"explorerUrl":null,"detail":"within policy"},{"id":2,"at":"2026-10-09T14:13:36.768904Z","client":"safe","outcome":"PAID","amount":0.050000,"recipient":"0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb","challengeId":"RWAxfIXyeXCllEJfftOVt68kdClBFKqtyKfe4cs5CRg","txHash":"0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","explorerUrl":"https://explore.testnet.tempo.xyz/tx/0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","detail":"transfer mined"},{"id":3,"at":"2026-10-09T14:13:38.110133Z","client":"safe","outcome":"DELIVERED","amount":0.050000,"recipient":"0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb","challengeId":"RWAxfIXyeXCllEJfftOVt68kdClBFKqtyKfe4cs5CRg","txHash":"0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","explorerUrl":"https://explore.testnet.tempo.xyz/tx/0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9","detail":"receipt matches"}]
+
+ASSISTANT: ## Comparison: 2 kg, London → Manchester
+
+| Option | Price | Delivery time |
+|---|---|---|
+| Parcel Post Standard | £4.90 | 3 days |
+| Swift Courier Premium | £8.60 | 1 day |
+
+## Recommendation
+Use **Parcel Post Standard** by default. It costs £3.70 less, and for most shop orders a 3-day delivery is fine. Switch to **Swift Courier Premium** if the customer paid for fast shipping or the order is time-sensitive. It's the only next-day option.
+
+## What was paid
+The payment policy allowed the premium quote, so I bought it. The standard quote is free.
+
+| Field | Value |
+|---|---|
+| Quote fee | 0.05 pathUSD (Tempo testnet) |
+| Outcome | Approved ("within policy"), then paid ("transfer mined"), then delivered ("receipt matches") |
+| Recipient | `0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb` |
+| Transaction | [`0xf95d4adc…7111e9`](https://explore.testnet.tempo.xyz/tx/0xf95d4adc1b0a217b3d423cbfa354bc17a663d295a1cb63675a4f200e537111e9) |
+
+The audit shows one charge of 0.05 pathUSD, recorded in three steps (approved, paid, delivered). There were no duplicate payments. 
+
+(4 turns, 21 s)

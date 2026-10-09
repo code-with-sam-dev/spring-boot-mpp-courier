@@ -1,0 +1,68 @@
+$ bin/evidence/04-unsafe-overpay.sh
+(Tempo Moderato testnet, chain 42431, test tokens only)
+# courier-api started with --courier.premium.price=5.00
+# retailer-assistant started with --spring.profiles.active=break
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.548089 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.45 pathUSD
+
+
+$ curl -s 'http://localhost:18080/break/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "body": "{\"courier\":\"Swift Courier Premium\",\"price\":8.60,\"currency\":\"GBP\",\"days\":1}",
+    "amountPaid": 5,
+    "txHash": "0x461659e630c03818bee3ce6b89d46309d718e88d3f1c3c493cb717b9132a7ea2"
+}
+
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.548048 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.45 pathUSD
+
+# the same request through the safe client
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "status": "REFUSED_BY_POLICY",
+    "quote": null,
+    "quoteFee": 0,
+    "paymentTx": null,
+    "explorerUrl": null,
+    "reason": "5.00 pathUSD is over the 0.10 per-request limit"
+}
+
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999978.548048 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  21.45 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/payments' | python3 -m json.tool
+[
+    {
+        "id": 1,
+        "at": "2026-10-09T14:12:32.532167Z",
+        "client": "unsafe",
+        "outcome": "PAID",
+        "amount": 5.0,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "mVqmVpY2DqMoLYJu7z6i92xbC4jf8g2VeN2EYvPGwBo",
+        "txHash": "0x461659e630c03818bee3ce6b89d46309d718e88d3f1c3c493cb717b9132a7ea2",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x461659e630c03818bee3ce6b89d46309d718e88d3f1c3c493cb717b9132a7ea2",
+        "detail": "no policy"
+    },
+    {
+        "id": 2,
+        "at": "2026-10-09T14:12:35.113479Z",
+        "client": "safe",
+        "outcome": "REFUSED",
+        "amount": 5.0,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "JR9e39cX2ZjerfcRbrYVlblPI6Rs__uw8ZDMZ6JcymI",
+        "txHash": null,
+        "explorerUrl": null,
+        "detail": "5.00 pathUSD is over the 0.10 per-request limit"
+    }
+]
+

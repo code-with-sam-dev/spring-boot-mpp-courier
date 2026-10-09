@@ -15,7 +15,7 @@ public final class TempoCalls {
     private TempoCalls() {
     }
 
-    /** transferWithMemo(address to, uint256 amount, bytes32 memo), selector 0x95777d59. */
+    /** transferWithMemo(address, uint256, bytes32), selector 0x95777d59. */
     public static String transferWithMemo(String to, BigInteger amount, String memo) {
         return FunctionEncoder.encode(new Function("transferWithMemo", List.of(
                 new Address(to),

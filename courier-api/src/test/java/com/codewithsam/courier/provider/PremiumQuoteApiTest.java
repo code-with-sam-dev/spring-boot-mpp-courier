@@ -30,6 +30,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 class PremiumQuoteApiTest {
 
     private static final String QUERY = "?from=London&to=Manchester&weightKg=2";
+    private static final String COURIER = "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb";
+    private static final String PATH_USD = "0x20c0000000000000000000000000000000000000";
     // Each test pays with its own (pretend) transaction.
     private final String paidHash = "0x" + HexFormat.of().formatHex(
             ByteBuffer.allocate(32).putLong(System.nanoTime()).array());
@@ -44,7 +46,8 @@ class PremiumQuoteApiTest {
     void theStandardQuoteIsFree() {
         assertThat(mvc.get().uri("/quotes/standard" + QUERY))
                 .hasStatusOk()
-                .bodyJson().extractingPath("$.courier").isEqualTo("Parcel Post Standard");
+                .bodyJson().extractingPath("$.courier")
+                .isEqualTo("Parcel Post Standard");
     }
 
     @Test
@@ -61,13 +64,13 @@ class PremiumQuoteApiTest {
         assertThat(challenge.intent()).isEqualTo("charge");
         assertThat(challenge.realm()).isEqualTo("localhost:8090");
         assertThat(challenge.request()).containsEntry("amount", "50000")
-                .containsEntry("recipient", "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb")
-                .containsEntry("currency", "0x20c0000000000000000000000000000000000000");
+                .containsEntry("recipient", COURIER)
+                .containsEntry("currency", PATH_USD);
     }
 
     @Test
     void anInvalidQuoteRequestIsRejectedBeforeAnyPayment() {
-        assertThat(mvc.get().uri("/quotes/premium?from=London&to=Manchester&weightKg=0"))
+        assertThat(mvc.get().uri("/quotes/premium" + QUERY.replace("=2", "=0")))
                 .hasStatus(400);
     }
 
@@ -116,13 +119,15 @@ class PremiumQuoteApiTest {
     }
 
     private Credential paidCredential() {
-        Challenge challenge = challengeFrom(mvc.get().uri("/quotes/premium" + QUERY).exchange());
+        Challenge challenge =
+                challengeFrom(mvc.get().uri("/quotes/premium" + QUERY).exchange());
         return new Credential(challenge.toEcho(),
                 Map.of("type", "hash", "hash", paidHash), null);
     }
 
     private Redemption redemption(Credential credential, String idempotencyKey) {
-        QuoteRequest request = new QuoteRequest("London", "Manchester", new BigDecimal("2"));
+        QuoteRequest request =
+                new QuoteRequest("London", "Manchester", new BigDecimal("2"));
         QuoteResponse quote = new QuoteResponse("Swift Courier Premium",
                 new BigDecimal("8.60"), "GBP", 1);
         return new Redemption(paidHash, credential.challenge().id(), idempotencyKey,

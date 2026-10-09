@@ -20,8 +20,8 @@ class EnvFileTest {
         env.put("COURIER_RECIPIENT_ADDRESS", "0xabc");
 
         assertThat(env.get("COURIER_RECIPIENT_ADDRESS")).contains("0xabc");
-        assertThat(PosixFilePermissions.toString(
-                Files.getPosixFilePermissions(dir.resolve(".env")))).isEqualTo("rw-------");
+        var permissions = Files.getPosixFilePermissions(dir.resolve(".env"));
+        assertThat(PosixFilePermissions.toString(permissions)).isEqualTo("rw-------");
     }
 
     @Test

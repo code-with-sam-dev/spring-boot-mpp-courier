@@ -57,7 +57,8 @@ public class RedemptionService {
             QuoteRequest request, QuoteResponse quote) {
         String challengeId = parse(authorization).orElseThrow().challenge().id();
         store.save(new Redemption(receipt.reference(), challengeId, idempotencyKey,
-                request.fingerprint(), quote, receipt.toPaymentReceipt(), clock.instant()));
+                request.fingerprint(), quote, receipt.toPaymentReceipt(),
+                clock.instant()));
     }
 
     private static Optional<Credential> parse(String authorization) {

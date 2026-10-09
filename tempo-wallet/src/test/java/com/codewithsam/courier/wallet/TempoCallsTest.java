@@ -12,7 +12,8 @@ class TempoCallsTest {
 
     @Test
     void transferWithMemoUsesTheTip20Selector() {
-        String data = TempoCalls.transferWithMemo(COURIER, BigInteger.valueOf(50_000), MEMO);
+        BigInteger fiveCents = BigInteger.valueOf(50_000);
+        String data = TempoCalls.transferWithMemo(COURIER, fiveCents, MEMO);
 
         assertThat(data).startsWith("0x95777d59");
         // selector + three 32-byte words
@@ -21,7 +22,8 @@ class TempoCallsTest {
 
     @Test
     void transferWithMemoCarriesRecipientAmountAndMemo() {
-        String data = TempoCalls.transferWithMemo(COURIER, BigInteger.valueOf(50_000), MEMO);
+        BigInteger fiveCents = BigInteger.valueOf(50_000);
+        String data = TempoCalls.transferWithMemo(COURIER, fiveCents, MEMO);
 
         assertThat(data).contains(COURIER.substring(2));
         assertThat(data).contains(String.format("%064x", 50_000));

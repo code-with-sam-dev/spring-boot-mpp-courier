@@ -14,13 +14,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class LostResponseSimulator {
 
-    private static final Logger log = LoggerFactory.getLogger(LostResponseSimulator.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(LostResponseSimulator.class);
 
     private final int responsesToLose;
     private final AtomicInteger lost = new AtomicInteger();
 
     public LostResponseSimulator(
-            @Value("${courier.misbehaviour.lose-paid-responses:0}") int responsesToLose) {
+            @Value("${courier.misbehaviour.lose-paid-responses:0}")
+            int responsesToLose) {
         this.responsesToLose = responsesToLose;
     }
 

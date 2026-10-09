@@ -1,0 +1,106 @@
+$ bin/evidence/02-assistant-paid-quote.sh
+(Tempo Moderato testnet, chain 42431, test tokens only; apps on 18090 and 18080)
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.848335 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.15 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/standard?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "courier": "Parcel Post Standard",
+    "price": 4.9,
+    "currency": "GBP",
+    "days": 3
+}
+
+
+$ curl -s 'http://localhost:18080/assistant/quotes/compare?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "standard": {
+        "courier": "Parcel Post Standard",
+        "price": 4.9,
+        "currency": "GBP",
+        "days": 3
+    },
+    "premium": {
+        "status": "PAID",
+        "quote": {
+            "courier": "Swift Courier Premium",
+            "price": 8.6,
+            "currency": "GBP",
+            "days": 1
+        },
+        "quoteFee": 0.05,
+        "paymentTx": "0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "reason": null
+    }
+}
+
+# asked again the same day: the record answers, nothing is paid
+
+$ curl -s 'http://localhost:18080/assistant/quotes/premium?from=London&to=Manchester&weightKg=2' | python3 -m json.tool
+{
+    "status": "PAID",
+    "quote": {
+        "courier": "Swift Courier Premium",
+        "price": 8.6,
+        "currency": "GBP",
+        "days": 1
+    },
+    "quoteFee": 0.05,
+    "paymentTx": "0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+    "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+    "reason": null
+}
+
+
+$ bin/balance.sh
+0x103604c41634224c9914bd79988369d694c69e2a  1999983.798294 pathUSD
+0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb  16.2 pathUSD
+
+
+$ curl -s 'http://localhost:18080/assistant/payments' | python3 -m json.tool
+[
+    {
+        "id": 1,
+        "at": "2026-10-09T14:11:06.319063Z",
+        "client": "safe",
+        "outcome": "APPROVED",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "Kw2IOIJEANRio_XpVYPk-bORAYSXQu6BA1dC3-qLS84",
+        "txHash": null,
+        "explorerUrl": null,
+        "detail": "within policy"
+    },
+    {
+        "id": 2,
+        "at": "2026-10-09T14:11:09.972953Z",
+        "client": "safe",
+        "outcome": "PAID",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "Kw2IOIJEANRio_XpVYPk-bORAYSXQu6BA1dC3-qLS84",
+        "txHash": "0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "detail": "transfer mined"
+    },
+    {
+        "id": 3,
+        "at": "2026-10-09T14:11:11.715714Z",
+        "client": "safe",
+        "outcome": "DELIVERED",
+        "amount": 0.05,
+        "recipient": "0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb",
+        "challengeId": "Kw2IOIJEANRio_XpVYPk-bORAYSXQu6BA1dC3-qLS84",
+        "txHash": "0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe",
+        "detail": "receipt matches"
+    }
+]
+
+# courier-api log
+c.c.c.p.payment.PaymentProblemAdvice     : 402 Payment Required: Payment is required for "localhost:18090" (Premium courier quotation)., challenge Kw2IOIJEANRio_XpVYPk-bORAYSXQu6BA1dC3-qLS84
+c.c.c.provider.payment.PaymentGate       : payment verified, tx 0x0b0cdfb433fe5e755e3a0f972b5afed5d5f38a1d8a79711f5f56e60fb28435fe

@@ -1,0 +1,39 @@
+$ ./mvnw -B -pl retailer-assistant verify -Ptestnet -Dit.test=HttpExchangeTranscriptTestnetIT
+(Tempo Moderato testnet, chain 42431, test tokens only)
+
+== 1. Ask for the premium quote with no payment ==
+> GET /quotes/premium?from=London&to=Manchester&weightKg=2
+> Idempotency-Key: transcript-1791555248734
+
+< HTTP/1.1 402
+< cache-control: no-store
+< content-type: application/problem+json
+< www-authenticate: Payment id="XkSC0rcJNEN3rlGCVFV0lFNaERKlqaOitEO-U6YObOk", realm="localhost:18196", method="tempo", intent="charge", request="eyJhbW91bnQiOiI1MDAwMCIsImN1cnJlbmN5IjoiMHgyMGMwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4ZTYxNGU0M2U0ZmJmOTg2N2JkZjRlMmRkYmQzZjYyODY1OGI5M2RkYiJ9", expires="2026-10-09T14:19:08.773192Z", description="Premium courier quotation"
+
+{"type":"https://paymentauth.org/problems/payment-required","title":"Payment Required","status":402,"detail":"Payment is required for \"localhost:18196\" (Premium courier quotation).","challengeId":"XkSC0rcJNEN3rlGCVFV0lFNaERKlqaOitEO-U6YObOk"}
+
+decoded request = {"amount":"50000","currency":"0x20c0000000000000000000000000000000000000","methodDetails":{"chainId":42431},"recipient":"0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb"}
+
+== 2. Read the challenge (what PaymentPolicyService checks) ==
+ChargeOffer[challengeId=XkSC0rcJNEN3rlGCVFV0lFNaERKlqaOitEO-U6YObOk, realm=localhost:18196, method=tempo, intent=charge, amountUnits=50000, currency=0x20c0000000000000000000000000000000000000, recipient=0xe614e43e4fbf9867bdf4e2ddbd3f628658b93ddb, chainId=42431, expires=2026-10-09T14:19:08.773192Z]
+
+== 3. Pay: transferWithMemo, memo bound to realm and challenge ==
+memo = 0xef1ed7120131de7975921eda9276c40000000000000000000047550ec0c75806
+tx hash, known before broadcast = 0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a
+mined: https://explore.testnet.tempo.xyz/tx/0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a
+
+== 4. Retry with the credential (push mode, type=hash) ==
+> GET /quotes/premium?from=London&to=Manchester&weightKg=2
+> Idempotency-Key: transcript-1791555248734
+> Authorization: Payment eyJjaGFsbGVuZ2UiOnsiZXhwaXJlcyI6IjIwMjYtMTAtMDlUMTQ6MTk6MDguNzczMTkyWiIsImlkIjoiWGtTQzByY0pORU4zcmxHQ1ZGVjBsRk5hRVJLbHFhT2l0RU8tVTZZT2JPayIsImludGVudCI6ImNoYXJnZSIsIm1ldGhvZCI6InRlbXBvIiwicmVhbG0iOiJsb2NhbGhvc3Q6MTgxOTYiLCJyZXF1ZXN0IjoiZXlKaGJXOTFiblFpT2lJMU1EQXdNQ0lzSW1OMWNuSmxibU41SWpvaU1IZ3lNR013TURBd01EQXdNREF3TURBd01EQXdNREF3TURBd01EQXdNREF3TURBd01EQXdNREF3SWl3aWJXVjBhRzlrUkdWMFlXbHNjeUk2ZXlKamFHRnBia2xrSWpvME1qUXpNWDBzSW5KbFkybHdhV1Z1ZENJNklqQjRaVFl4TkdVME0yVTBabUptT1RnMk4ySmtaalJsTW1Sa1ltUXpaall5T0RZMU9HSTVNMlJrWWlKOSJ9LCJwYXlsb2FkIjp7Imhhc2giOiIweDJlYzQ1OGVkMTEwYjUxYzVmMzg5MDBlOGNiMDNiYjUzNTc1MTEwYzg4NjBmZDBhNjEyYmY2MmE3NGZhYmI3NmEiLCJ0eXBlIjoiaGFzaCJ9LCJzb3VyY2UiOiJkaWQ6cGtoOmVpcDE1NTo0MjQzMToweDEwMzYwNGM0MTYzNDIyNGM5OTE0YmQ3OTk4ODM2OWQ2OTRjNjllMmEifQ
+
+decoded credential = {"challenge":{"expires":"2026-10-09T14:19:08.773192Z","id":"XkSC0rcJNEN3rlGCVFV0lFNaERKlqaOitEO-U6YObOk","intent":"charge","method":"tempo","realm":"localhost:18196","request":"eyJhbW91bnQiOiI1MDAwMCIsImN1cnJlbmN5IjoiMHgyMGMwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4ZTYxNGU0M2U0ZmJmOTg2N2JkZjRlMmRkYmQzZjYyODY1OGI5M2RkYiJ9"},"payload":{"hash":"0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a","type":"hash"},"source":"did:pkh:eip155:42431:0x103604c41634224c9914bd79988369d694c69e2a"}
+
+< HTTP/1.1 200
+< cache-control: private
+< content-type: application/json
+< payment-receipt: eyJtZXRob2QiOiJ0ZW1wbyIsInJlZmVyZW5jZSI6IjB4MmVjNDU4ZWQxMTBiNTFjNWYzODkwMGU4Y2IwM2JiNTM1NzUxMTBjODg2MGZkMGE2MTJiZjYyYTc0ZmFiYjc2YSIsInN0YXR1cyI6InN1Y2Nlc3MiLCJ0aW1lc3RhbXAiOiIyMDI2LTEwLTA5VDE0OjE0OjEzLjE0NzUzNFoifQ
+
+{"courier":"Swift Courier Premium","price":8.60,"currency":"GBP","days":1}
+
+decoded receipt = {"method":"tempo","reference":"0x2ec458ed110b51c5f38900e8cb03bb53575110c8860fd0a612bf62a74fabb76a","status":"success","timestamp":"2026-10-09T14:14:13.147534Z"}

@@ -22,7 +22,8 @@ class TempoWalletTest {
 
         SignedTransfer signed = TempoWallet.sign(tx, 42431, payer);
 
-        var decoded = (SignedRawTransaction) TransactionDecoder.decode(signed.rawTransaction());
+        var decoded = (SignedRawTransaction)
+                TransactionDecoder.decode(signed.rawTransaction());
         assertThat(decoded.getFrom()).isEqualToIgnoringCase(payer.getAddress());
         assertThat(((Transaction1559) decoded.getTransaction()).getChainId())
                 .isEqualTo(42431L);
