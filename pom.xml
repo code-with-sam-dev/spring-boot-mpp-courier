@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.codewithsam.courier</groupId>
+    <artifactId>spring-boot-mpp-courier</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>spring-boot-mpp-courier</name>
+    <description>
+        A retailer's AI assistant pays for a premium courier quotation with the
+        Machine Payments Protocol (MPP) on Tempo testnet, under a payment policy.
+    </description>
+
+    <modules>
+        <module>tempo-wallet</module>
+        <!--C module courier-api -->
+        <!--R module retailer-assistant -->
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <!-- Spring Boot 4.1.1 ships Tomcat 11.0.24, which has open critical advisories. -->
+        <tomcat.version>11.0.26</tomcat.version>
+        <spring-ai.version>2.0.1</spring-ai.version>
+        <mpp-java.version>0.1.6</mpp-java.version>
+        <web3j.version>6.0.0</web3j.version>
+        <!-- mpp-java and web3j both bring Bouncy Castle; pin the newer one. -->
+        <bouncycastle.version>1.84</bouncycastle.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.codewithsam.courier</groupId>
+                <artifactId>tempo-wallet</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.stripe</groupId>
+                <artifactId>mpp-java</artifactId>
+                <version>${mpp-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.web3j</groupId>
+                <artifactId>crypto</artifactId>
+                <version>${web3j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.web3j</groupId>
+                <artifactId>abi</artifactId>
+                <version>${web3j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <!-- Tests that spend testnet tokens on Tempo Moderato: ./mvnw verify -Ptestnet -->
+        <profile>
+            <id>testnet</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-failsafe-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>integration-test</goal>
+                                        <goal>verify</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+</project>

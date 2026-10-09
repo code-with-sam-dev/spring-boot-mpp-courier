@@ -1,0 +1,7 @@
+target/
+.env*
+runs/
+*.key
+.idea/
+*.iml
+.DS_Store
