@@ -18,6 +18,6 @@ public final class PathUsd {
     }
 
     public static BigDecimal fromBaseUnits(BigInteger units) {
-        return new BigDecimal(units).movePointLeft(DECIMALS);
+        return new BigDecimal(units).movePointLeft(DECIMALS).stripTrailingZeros();
     }
 }
