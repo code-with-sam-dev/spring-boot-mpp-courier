@@ -9,5 +9,5 @@ if [ -z "$JAR" ]; then
   ./mvnw -q -B -pl tempo-wallet package -DskipTests
   JAR=$(ls tempo-wallet/target/tempo-wallet-*-exec.jar)
 fi
-"$JAVA_HOME/bin/java" -jar "$JAR" new-courier .env
-"$JAVA_HOME/bin/java" -jar "$JAR" new-payer .env
+"$JAVA_HOME/bin/java" -jar "$JAR" new-courier "${ENV_FILE:-.env}"
+"$JAVA_HOME/bin/java" -jar "$JAR" new-payer "${ENV_FILE:-.env}"

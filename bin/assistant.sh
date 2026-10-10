@@ -5,7 +5,7 @@
 set -e
 DIR=$(cd "$(dirname "$0")/.." && pwd); cd "$DIR"
 . bin/java25.sh
-set -a; . ./.env; set +a
+set -a; . "${ENV_FILE:-./.env}"; set +a
 mkdir -p runs
 exec "$JAVA_HOME/bin/java" -jar retailer-assistant/target/retailer-assistant-*-exec.jar \
   --server.port="${ASSISTANT_PORT:-8080}" \

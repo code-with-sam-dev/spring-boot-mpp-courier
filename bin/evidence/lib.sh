@@ -4,7 +4,7 @@ DIR=$(cd "$(dirname "$0")/../.." && pwd); cd "$DIR"
 export COURIER_PORT=${COURIER_PORT:-18090} ASSISTANT_PORT=${ASSISTANT_PORT:-18080}
 C=http://localhost:$COURIER_PORT
 A=http://localhost:$ASSISTANT_PORT
-set -a; . ./.env; set +a
+set -a; . "${ENV_FILE:-./.env}"; set +a
 mkdir -p runs evidence
 
 start_courier() {   # extra Spring properties as arguments

@@ -6,7 +6,7 @@
 set -e
 DIR=$(cd "$(dirname "$0")/.." && pwd); cd "$DIR"
 . bin/java25.sh
-set -a; . ./.env; set +a
+set -a; . "${ENV_FILE:-./.env}"; set +a
 PORT=${COURIER_PORT:-8090}
 mkdir -p runs
 exec "$JAVA_HOME/bin/java" -jar courier-api/target/courier-api-*-exec.jar \
