@@ -10,6 +10,11 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,6 +90,30 @@ class PaymentPolicyServiceTest {
         assertRefused(TestChallenges.premiumQuote(),
                 "0.05 pathUSD would bring today's spend to 0.30,"
                         + " over the 0.25 daily budget");
+    }
+
+    @Test
+    void twentySimultaneousRequestsCannotOverspendTheDailyBudget() throws Exception {
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Boolean>> results = new ArrayList<>();
+        try (ExecutorService threads = Executors.newFixedThreadPool(20)) {
+            for (int i = 0; i < 20; i++) {
+                results.add(threads.submit(() -> {
+                    start.await();
+                    return policy.approve(offer(TestChallenges.premiumQuote())).approved();
+                }));
+            }
+            start.countDown();
+        }
+
+        long approved = 0;
+        for (Future<Boolean> result : results) {
+            if (result.get()) {
+                approved++;
+            }
+        }
+        assertThat(approved).isEqualTo(5);
+        assertThat(audit.spentToday()).isEqualByComparingTo("0.25");
     }
 
     @Test
