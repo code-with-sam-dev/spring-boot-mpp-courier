@@ -145,6 +145,8 @@ bin/courier.sh              # courier-api on 8090
 bin/assistant.sh            # retailer-assistant on 8080, MCP at /mcp
 curl 'localhost:8080/assistant/quotes/compare?from=London&to=Manchester&weightKg=2'
 curl localhost:8080/assistant/payments
+bin/challenge.sh            # ask for the premium quote unpaid, decode the 402 challenge
+bin/audit.sh                # the payment audit, one row per line
 ```
 
 `.env` holds `PAYER_PRIVATE_KEY`, `PAYER_ADDRESS`, `COURIER_RECIPIENT_ADDRESS` and
