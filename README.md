@@ -167,7 +167,7 @@ bin/assistant.sh --spring.profiles.active=break              # adds GET /break/q
 ## Tests
 
 ```sh
-bin/tests.sh            # 43 offline tests, no network, one line each
+bin/tests.sh            # 44 offline tests, no network, one line each
 bin/tests.sh testnet    # plus 6 integration tests that pay on Tempo testnet
 ./mvnw verify -Ptestnet # the same, plain Maven
 ```
